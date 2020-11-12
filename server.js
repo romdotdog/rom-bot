@@ -21,18 +21,60 @@ async function latestCopypasta() {
 
 let snipes = []
 
-client.on('messageDelete', msg => {
+client.on('messageDelete', message => {
   snipes.push({
     type: 'deleted',
-    message: msg
+    message
   })
 })
 
-client.on('messageUpdate', (old, msg) => {
+const formatters = {
+  deleted: info => ({
+    "embeds": [
+      {
+        "description": "Message deleted by @user in #general\n${msg}",
+        "color": 15746887,
+        "author": {
+          "name": "name",
+          "icon_url": "url"
+        },
+        "footer": {
+          "text": ""
+        },
+        "timestamp": "2020-11-11T06:00:00.000Z"
+      },
+      {
+        "description": "Message edited by @user in #general",
+        "color": 7039851,
+        "fields": [
+          {
+            "name": "Old",
+            "value": "message"
+          },
+          {
+            "name": "New",
+            "value": "message"
+          }
+        ],
+        "author": {
+          "name": "name",
+          "icon_url": "url"
+        },
+        "footer": {
+          "text": ""
+        },
+        "timestamp": "2020-11-11T06:00:00.000Z"
+      }
+    ]
+  })
+}
+
+
+client.on('messageUpdate', (old, message) => {
   snipes.push({
     type: 'edited',
-    message: msg,
-    old_message: msg
+    message,
+    old
   })
 })
 
