@@ -16,4 +16,12 @@ fs.readdir(directoryPath, function (err, files) {
     });
 });
 
-bind(({message, content}))
+bind(({message, content}) => {
+  if (content.startsWith("_")) {
+    const args = content.split("")
+    const command = registry[args[0].substring(1)]
+    if (command) {
+      command(message, args.slice(1))
+    }
+  }
+})
