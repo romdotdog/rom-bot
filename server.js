@@ -22,7 +22,7 @@ async function latestCopypasta() {
 let snipes = []
 
 client.on('messageDelete', message => {
-  console.log("pushed message")
+  if (message.author.bot) return;
   snipes.push({
     type: 'deleted',
     message,
@@ -31,6 +31,7 @@ client.on('messageDelete', message => {
 })
 
 client.on('messageUpdate', (old, message) => {
+  if (message.author.bot) return;
   snipes.push({
     type: 'edited',
     message,
@@ -62,15 +63,15 @@ const formatters = {
         "fields": [
           {
             "name": "Old",
-            "value": info.old.content
+            "value": info.old.content || 'An error has occurred.'
           },
           {
             "name": "New",
-            "value": info.message.content
+            "value": info.message.content || 'An error has occurred.'
           }
         ],
         "author": {
-          "name": info.message.author.tag,
+          "name": info.message.author.tag || 'An error has occurred.',
           "icon_url": info.message.author.displayAvatarURL({
             size: 128,
             dynamic: true
@@ -92,6 +93,7 @@ client.on('ready', () => {
 
 client.on('message', async message => {
   if (message.author.bot) return;
+  if (!message.guild) {message.channel.send("Nice try. No can do chief."); return};
   if (message.mentions.has(message.guild.member(client.user))) {
     message.react(emojis.random())
   };
@@ -108,10 +110,11 @@ client.on('message', async message => {
     [() => content === "_copypasta",                                  async () => {let u = await latestCopypasta(); if (u) message.channel.send(u)}],
     [() => content === "_snipe", async () => {
       const filtered = snipes.filter(snipe => snipe.time.getTime() > new Date().getTime() - 60000).slice(0, 5)
+      snipes = []
       if (filtered.length > 0) {
+        console.log(filtered)
         message.channel.send(`${filtered.length} snipe${filtered.length === 1 ? '' : 's'}. Sniped by ${message.author.toString()}`)
         filtered.forEach(snipe => message.channel.send({ embed: formatters[snipe.type](snipe) }))
-        snipes = []
       }          
       else
         message.channel.send("Nobody to snipe.")
