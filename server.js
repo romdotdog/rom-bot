@@ -22,6 +22,7 @@ async function latestCopypasta() {
 let snipes = []
 
 client.on('messageDelete', message => {
+  console.log("pushed message")
   snipes.push({
     type: 'deleted',
     message,
@@ -39,7 +40,7 @@ client.on('messageUpdate', (old, message) => {
 })
 
 const formatters = {
-  deleted: (info, sniper) => ({
+  deleted: info => ({
         "description": `Message deleted by ${info.message.author.toString()} in ${info.message.channel.toString()}\n${info.message.content}`,
         "color": 15746887,
         "author": {
@@ -55,7 +56,7 @@ const formatters = {
         "timestamp": info.time.toISOString()
       }),
   
-  edited: (info, sniper) => ({
+  edited: info => ({
         "description": `Message edited by ${info.message.author.toString()} in ${info.message.channel.toString()}\n${info.message.content}`,
         "color": 7039851,
         "fields": [
@@ -104,9 +105,16 @@ client.on('message', async message => {
     [() => content.includes("imagine"),                                     () => message.react("🖕")],
     [() => content.includes("anime") || message.content.includes("pillow"), () => message.react("😳")],
     [() => content.includes("meow"),                                        () => message.channel.send(`Wowwwww, you meow like a cat! That means you are one, right? Shut the fuck up. If you really want to be put on a leash and treated like a domestic animal then that’s called a fetish, not “quirky” or “cute”. What part of you seriously thinks that any part of acting like a feline establishes a reputation of appreciation? Is it your lack of any defining aspect of personality that urges you to resort to shitty representations of cats to create an illusion of meaning in your worthless life? Wearing “cat ears” in the shape of headbands further notes the complete absence of human attribution to your false sense of personality, such as intelligence or charisma in any form or shape. Where do you think this mindset’s gonna lead you? You think you’re funny, random, quirky even? What makes you think that acting like a fucking cat will make a goddamn hyena laugh? I, personally, feel extremely sympathetic towards you as your only escape from the worthless thing you call your existence is to pretend to be an animal. But it’s not a worthy choice to assert this horrifying fact as a dominant trait, mainly because personality traits require an initial personality to lay their foundation on. You’re not worthy of anybody’s time, so go fuck off, “cat-girl”.`)],
-    [() => content === "_copypasta",                                  async () => {let u = await latestCopypasta(); if (u) message.channel.send(u)}]
+    [() => content === "_copypasta",                                  async () => {let u = await latestCopypasta(); if (u) message.channel.send(u)}],
     [() => content === "_snipe", async () => {
-      const filtered = snipes.filter(snipe => snipe.time )
+      const filtered = snipes.filter(snipe => snipe.time.getTime() > new Date().getTime() - 60000)//.slice(0, 10)
+      if (filtered.length > 0)
+        message.channel.send({
+          "content": `${filtered.length} snipe${filtered.length === 1 ? '' : 's'} from ${message.author.toString()}`,
+          "embeds": filtered.map(snipe => formatters[snipe.type](snipe))
+        })
+      else
+        message.channel.send("Nothing to snipe.")
     }]
   ].forEach(([trigger, fire]) => { if (trigger()) fire() });
 });
