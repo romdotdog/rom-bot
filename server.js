@@ -24,59 +24,64 @@ let snipes = []
 client.on('messageDelete', message => {
   snipes.push({
     type: 'deleted',
-    message
+    message,
+    time: new Date()
   })
 })
-
-const formatters = {
-  deleted: info => ({
-    "embeds": [
-      {
-        "description": "Message deleted by @user in #general\n${msg}",
-        "color": 15746887,
-        "author": {
-          "name": "name",
-          "icon_url": "url"
-        },
-        "footer": {
-          "text": ""
-        },
-        "timestamp": "2020-11-11T06:00:00.000Z"
-      },
-      {
-        "description": "Message edited by @user in #general",
-        "color": 7039851,
-        "fields": [
-          {
-            "name": "Old",
-            "value": "message"
-          },
-          {
-            "name": "New",
-            "value": "message"
-          }
-        ],
-        "author": {
-          "name": "name",
-          "icon_url": "url"
-        },
-        "footer": {
-          "text": ""
-        },
-        "timestamp": "2020-11-11T06:00:00.000Z"
-      }
-    ]
-  })
-}
-
 
 client.on('messageUpdate', (old, message) => {
   snipes.push({
     type: 'edited',
     message,
-    old
+    old,
+    time: new Date()
   })
 })
+
+const formatters = {
+  deleted: (info, sniper) => ({
+        "description": `Message deleted by ${info.message.author.toString()} in ${info.message.channel.toString()}\n${info.message.content}`,
+        "color": 15746887,
+        "author": {
+          "name": info.message.author.tag,
+          "icon_url": info.message.author.displayAvatarURL({
+            size: 128,
+            dynamic: true
+          })
+        },
+        "footer": {
+          "text": `Event happened at: `
+        },
+        "timestamp": info.time.toISOString()
+      }),
+  
+  edited: (info, sniper) => ({
+        "description": `Message edited by ${info.message.author.toString()} in ${info.message.channel.toString()}\n${info.message.content}`,
+        "color": 7039851,
+        "fields": [
+          {
+            "name": "Old",
+            "value": info.old.content
+          },
+          {
+            "name": "New",
+            "value": info.message.content
+          }
+        ],
+        "author": {
+          "name": info.message.author.tag,
+          "icon_url": info.message.author.displayAvatarURL({
+            size: 128,
+            dynamic: true
+          })
+        },
+        "footer": {
+          "text": `Event happened at: `
+        },
+        "timestamp": info.time.toISOString()
+      })
+    
+}
 
 /* Start */
 client.on('ready', () => {
@@ -100,6 +105,9 @@ client.on('message', async message => {
     [() => content.includes("anime") || message.content.includes("pillow"), () => message.react("😳")],
     [() => content.includes("meow"),                                        () => message.channel.send(`Wowwwww, you meow like a cat! That means you are one, right? Shut the fuck up. If you really want to be put on a leash and treated like a domestic animal then that’s called a fetish, not “quirky” or “cute”. What part of you seriously thinks that any part of acting like a feline establishes a reputation of appreciation? Is it your lack of any defining aspect of personality that urges you to resort to shitty representations of cats to create an illusion of meaning in your worthless life? Wearing “cat ears” in the shape of headbands further notes the complete absence of human attribution to your false sense of personality, such as intelligence or charisma in any form or shape. Where do you think this mindset’s gonna lead you? You think you’re funny, random, quirky even? What makes you think that acting like a fucking cat will make a goddamn hyena laugh? I, personally, feel extremely sympathetic towards you as your only escape from the worthless thing you call your existence is to pretend to be an animal. But it’s not a worthy choice to assert this horrifying fact as a dominant trait, mainly because personality traits require an initial personality to lay their foundation on. You’re not worthy of anybody’s time, so go fuck off, “cat-girl”.`)],
     [() => content === "_copypasta",                                  async () => {let u = await latestCopypasta(); if (u) message.channel.send(u)}]
+    [() => content === "_snipe", async () => {
+      const filtered = snipes.filter(snipe => snipe.time )
+    }]
   ].forEach(([trigger, fire]) => { if (trigger()) fire() });
 });
 
