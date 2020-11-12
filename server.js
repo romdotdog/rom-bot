@@ -7,6 +7,7 @@ const fetch = require('node-fetch');
 
 const client = new Discord.Client();
 const emojis = ["🧢", "🙄", "🤔", "🖕"]
+const bannedWords = process.env.BANNED_WORDS.split(" ")
 
 /* Useful functions */
 Array.prototype.random = function () {
@@ -19,11 +20,16 @@ async function latestCopypasta() {
   return `**${post.title}**\n${post.selftext}`.substring(0, 2000) || post.title
 }
 
+String.prototype.banned = function() {
+  return bannedWords.some(w => this.includes(w))
+}
+
 /* Snipes */
 let snipes = []
 
 client.on('messageDelete', message => {
   if (message.author.bot) return;
+  if (message.content.banned()) return;
   snipes.push({
     type: 'deleted',
     message,
@@ -33,6 +39,7 @@ client.on('messageDelete', message => {
 
 client.on('messageUpdate', (old, message) => {
   if (message.author.bot) return;
+  if (old.content.banned()) return;
   snipes.push({
     type: 'edited',
     message,
@@ -43,7 +50,7 @@ client.on('messageUpdate', (old, message) => {
 
 const formatters = {
   deleted: info => ({
-        "description": `**Message deleted by ${info.message.author.toString()} in ${info.message.channel.toString()}**\n${info.message.content}`,
+        "description": `**Message deleted in ${info.message.channel.toString()} by ${info.message.author.toString()}**\n${info.message.content}`,
         "color": 15746887,
         "author": {
           "name": info.message.author.tag,
@@ -103,6 +110,26 @@ client.on('message', async message => {
   
   /* The real action */
   [
+    [() => content.banned(), () => {
+      message.delete();
+      const channel = message.guild.channels.cache.find(ch => ch.name === 'logs');
+      // Do nothing if the channel wasn't found on this server
+      if (!channel) return;
+      channel.send({
+        embed: {
+          "title": "Banned word deleted",
+          "description": `**Message deleted in ${message.channel.toString()} by ${message.author.toString()}**\n${message.content}`,
+          "color": 9047309,
+          "author": {
+            "name": message.author.tag,
+            "icon_url": message.author.displayAvatarURL({
+              size: 128,
+              dynamic: true
+            })
+          }
+        }
+      })
+    }],
     [() => content === "k",                                                 () => message.channel.send(`K? K what? The letter before L? The letter after J? Did you know that in JK the K stands for “kidding?” So your reply is “kidding?” or K as in Potassium? Do you need some Special K for breakfast? K as in I can K/O you? Can I knock you out and feed you to hungry sharks? Sharks have a K in it. "K"? Are you fucking kidding me? I spent a decent portion of my life writing all of that and your response to me is "K"? Are you so mentally handicapped that the only letter you can comprehend is "K" - or are you just some fucking asshole who thinks that with such a short response, he can make a statement about how meaningless what was written was? Well, I'll have you know that what I wrote was NOT meaningless, in fact, I even had my written work proof-read by several professors of literature. Don't believe me? I doubt you would, and your response to this will probably be "K" once again. Do I give a fuck? No, does it look like I give even the slightest fuck about a single letter? I bet you took the time to type that one letter too, I bet you sat there and chuckled to yourself for 20 hearty seconds before pressing "send". You're so fucking pathetic. I'm honestly considering directing you to a psychiatrist, but I'm simply far too nice to do something like that. You, however, will go out of your way to make a fool out of someone by responding to a well-thought-out, intelligent, or humorous statement that probably took longer to write than you can last in bed with a chimpanzee. What do I have to say to you? Absolutely nothing. I couldn't be bothered to respond to such a worthless attempt at a response. Do you want "K" on your gravestone?`)],
     [() => message.content === "Ok",                                        () => message.channel.send(`"Ok"? Are you fucking kidding me? I spent a decent portion of my life writing all of that and your response to me is "Ok"? Are you so mentally handicapped that the only word you can comprehend is "Ok" - or are you just some fucking asshole who thinks that with such a short response, he can make a statement about how meaningless what was written was? Well, I'll have you know that what I wrote was NOT meaningless, in fact, I even had my written work proof-read by several professors of literature. Don't believe me? I doubt you would, and your response to this will probably be "Ok" once again. Do I give a fuck? No, does it look like I give even the slightest fuck about two fucking letters? I bet you took the time to type those two letters too, I bet you sat there and chuckled to yourself for 20 hearty seconds before pressing "send". You're so fucking pathetic. I'm honestly considering directing you to a psychiatrist, but I'm simply far too nice to do something like that. You, however, will go out of your way to make a fool out of someone by responding to a well-thought-out, intelligent, or humorous statement that probably took longer to write than you can last in bed with a chimpanzee. What do I have to say to you? Absolutely nothing. I couldn't be bothered to respond to such a worthless attempt at a response. Do you want "Ok" on your gravestone?`)],
     [() => content.includes("based"),                                       () => message.channel.send(`Based? Based on what? In your dick? Please shut the fuck up and use words properly you fuckin troglodyte, do you think God gave us a freedom of speech just to spew random words that have no meaning that doesn't even correllate to the topic of the conversation? Like please you always complain about why no one talks to you or no one expresses their opinions on you because you're always spewing random shit like poggers based cringe and when you try to explain what it is and you just say that it's funny like what? What the fuck is funny about that do you think you'll just become a stand-up comedian that will get a standing ovation just because you said "cum" in the stage? HELL NO YOU FUCKIN IDIOT, so please shut the fuck up and use words properly you dumb bitch`)],
