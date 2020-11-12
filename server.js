@@ -14,10 +14,14 @@ Array.prototype.random = function () {
 }
 
 async function latestCopypasta() {
-  const results = await ((await fetch("https://www.reddit.com/r/copypasta/new.json")).json())
-  const post = results.data.children[0].data
-  return post.selftext || post.title
+  const results = await ((await fetch("https://www.reddit.com/r/copypasta.json")).json())
+  const post = results.data.children.random().data
+  return `**${post.title}**\n${post.selftext}`.substring(0, 2000) || post.title
 }
+
+let snipes = []
+
+
 
 /* Start */
 client.on('ready', () => {
@@ -39,7 +43,7 @@ client.on('message', async message => {
     [() => content.includes("based"), () => message.channel.send(`Based? Based on what? In your dick? Please shut the fuck up and use words properly you fuckin troglodyte, do you think God gave us a freedom of speech just to spew random words that have no meaning that doesn't even correllate to the topic of the conversation? Like please you always complain about why no one talks to you or no one expresses their opinions on you because you're always spewing random shit like poggers based cringe and when you try to explain what it is and you just say that it's funny like what? What the fuck is funny about that do you think you'll just become a stand-up comedian that will get a standing ovation just because you said "cum" in the stage? HELL NO YOU FUCKIN IDIOT, so please shut the fuck up and use words properly you dumb bitch`)],
     [() => content.includes("imagine"), () => message.react("🖕")],
     [() => content.includes("anime") || message.content.includes("pillow"), () => message.react("😳")],
-    [() => content === "_copypasta", () => {let u = latestCopypasta(); if (u) message.channel.send(u)}]
+    [() => content === "_copypasta", async () => {let u = await latestCopypasta(); if (u) message.channel.send(u)}]
   ].forEach(([trigger, fire]) => { if (trigger()) fire() });
 });
 
