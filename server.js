@@ -3,34 +3,17 @@
 // Good luck reading this you little shit
 
 const Discord = require('discord.js');
-const fetch = require('node-fetch');
 
-var client = new Discord.Client(); // expose globally
+const client = new Discord.Client();
 const emojis = ["🧢", "🙄", "🤔", "🖕"]
-const bannedWords = process.env.BANNED_WORDS.split(" ")
-
-/* Useful functions */
-Array.prototype.random = function () {
-  return this[Math.floor((Math.random()*this.length))];
-}
-
-async function latestCopypasta() {
-  const results = await ((await fetch("https://www.reddit.com/r/copypasta.json")).json())
-  const post = results.data.children.random().data
-  return `**${post.title}**\n${post.selftext}`.substring(0, 2000) || post.title
-}
-
-String.prototype.banned = function() {
-  return bannedWords.some(w => this.includes(w))
-}
 
 /* Snipes */
-clisnipes = []
+client.snipes = []
 
 client.on('messageDelete', message => {
   if (message.author.bot) return;
   if (message.content.banned()) return;
-  snipes.push({
+  client.snipes.push({
     type: 'deleted',
     message,
     time: new Date()
@@ -40,7 +23,7 @@ client.on('messageDelete', message => {
 client.on('messageUpdate', (old, message) => {
   if (message.author.bot) return;
   if (old.content.banned()) return;
-  snipes.push({
+  client.snipes.push({
     type: 'edited',
     message,
     old,
@@ -48,50 +31,6 @@ client.on('messageUpdate', (old, message) => {
   })
 })
 
-const formatters = {
-  deleted: info => ({
-        "description": `**Message deleted in ${info.message.channel.toString()} by ${info.message.author.toString()}**\n${info.message.content}`,
-        "color": 15746887,
-        "author": {
-          "name": info.message.author.tag,
-          "icon_url": info.message.author.displayAvatarURL({
-            size: 128,
-            dynamic: true
-          })
-        },
-        "footer": {
-          "text": `Event happened at: `
-        },
-        "timestamp": info.time.toISOString()
-      }),
-  
-  edited: info => ({
-        "description": `Message edited by ${info.message.author.toString()} in ${info.message.channel.toString()}`,
-        "color": 7039851,
-        "fields": [
-          {
-            "name": "Old",
-            "value": info.old.content || 'An error has occurred.'
-          },
-          {
-            "name": "New",
-            "value": info.message.content || 'An error has occurred.'
-          }
-        ],
-        "author": {
-          "name": info.message.author.tag || 'An error has occurred.',
-          "icon_url": info.message.author.displayAvatarURL({
-            size: 128,
-            dynamic: true
-          })
-        },
-        "footer": {
-          "text": `Event happened at: `
-        },
-        "timestamp": info.time.toISOString()
-      })
-    
-}
 
 /* Start */
 client.on('ready', () => {
@@ -110,45 +49,6 @@ client.on('message', async message => {
   
   const content = message.content.toLowerCase();
   messageBindings.forEach(d => d(message, content, client))
-  
-  /* The real action */
-  [
-    [() => content.banned(), () => {
-      message.delete();
-      const channel = message.guild.channels.cache.find(ch => ch.name === 'logs');
-      // Do nothing if the channel wasn't found on this server
-      if (!channel) return;
-      channel.send({
-        embed: {
-          "title": "Banned word deleted",
-          "description": `**Message deleted in ${message.channel.toString()} by ${message.author.toString()}**\n${message.content}`,
-          "color": 9047309,
-          "author": {
-            "name": message.author.tag,
-            "icon_url": message.author.displayAvatarURL({
-              size: 128,
-              dynamic: true
-            })
-          },
-          "footer": {
-            "text": `ID: ${message.id}`
-          },
-          "timestamp": new Date().toISOString()
-        }
-      })
-    }],
-    
-    [() => content === "_snipe", () => {
-      const filtered = snipes.filter(snipe => snipe.time.getTime() > new Date().getTime() - 60000).slice(0, 5)
-      snipes = []
-      if (filtered.length > 0) {
-        message.channel.send(`${filtered.length} snipe${filtered.length === 1 ? '' : 's'}. Sniped by ${message.author.toString()}`)
-        filtered.forEach(snipe => message.channel.send({ embed: formatters[snipe.type](snipe) }))
-      }          
-      else
-        message.channel.send("Nobody to snipe.")
-    }]
-  ].forEach(([trigger, fire]) => { if (trigger()) fire() });
 });
 
 /* Require modules */
