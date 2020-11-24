@@ -45,7 +45,7 @@ const formatters = {
     
 }
 
-module.exports = (bind, register) => {
+module.exports = register => {
   register("snipe", (message, args, client) => {
     const filtered = client.snipes.filter(snipe => snipe.time.getTime() > new Date().getTime() - 60000).slice(0, 5)
       client.snipes = []

@@ -19,8 +19,8 @@ module.exports = bind => {
 
   bind((message, content, client) => {
     if (content.startsWith("_")) {
-      console.log("hooray")
       const args = content.split(" ")
+      console.log(args[0].substring(1))
       const command = registry[args[0].substring(1)]
       if (command) {
         command(message, args.slice(1), client)

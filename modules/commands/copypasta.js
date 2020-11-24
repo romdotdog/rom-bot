@@ -10,7 +10,7 @@ async function latestCopypasta() {
   return `**${post.title}**\n${post.selftext}`.substring(0, 2000) || post.title
 }
 
-module.exports = (bind, register) => {
+module.exports = register => {
   register("copypasta", message => {
     latestCopypasta().then(u => {
       if (u) message.channel.send(u)
