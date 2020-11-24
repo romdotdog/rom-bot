@@ -1,6 +1,6 @@
 module.exports = bind => {
   const registry = {}
-  const register = (name, f) => registry[name, f]
+  const register = (name, f) => registry[name] = f
 
   const path = require('path');
   const fs = require('fs');

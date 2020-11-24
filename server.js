@@ -46,7 +46,7 @@ client.on('message', async message => {
   if (message.mentions.has(message.guild.member(client.user))) {
     message.react(emojis.random())
   };
-  
+    
   const content = message.content.toLowerCase();
   messageBindings.forEach(d => d(message, content, client))
 });
