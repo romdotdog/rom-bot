@@ -164,7 +164,7 @@ fs.readdir(directoryPath, function (err, files) {
     } 
     
     files.forEach(function (file) {
-        require(file)
+        require('./modules/' + file)(bind)
     });
 });
 
