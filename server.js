@@ -58,13 +58,13 @@ const fs = require('fs');
 
 const directoryPath = path.join(__dirname, 'modules');
 
-fs.readdir(directoryPath, function(err, files) {
+fs.readdir(directoryPath, { withFileTypes: true }, function(err, files) {
     if (err) {
         return console.log('Unable to scan directory: ' + err);
     } 
     
-    files.forEach(function(file) {
-        require('./modules/' + file)(bind)
+    files.filter(dirent => dirent.isFile()).forEach(function(file) {
+        require(path.join(directoryPath, file.name))(bind)
     });
 });
 
