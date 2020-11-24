@@ -25,7 +25,7 @@ String.prototype.banned = function() {
 }
 
 /* Snipes */
-let snipes = []
+clisnipes = []
 
 client.on('messageDelete', message => {
   if (message.author.bot) return;
@@ -99,7 +99,7 @@ client.on('ready', () => {
 });
 
 const messageBindings = []
-var bind = (f) => messageBindings.push(f)
+const bind = (f) => messageBindings.push(f)
 
 client.on('message', async message => {
   if (message.author.bot) return;
@@ -109,7 +109,7 @@ client.on('message', async message => {
   };
   
   const content = message.content.toLowerCase();
-  messageBindings.forEach(d => d({message, content}))
+  messageBindings.forEach(d => d(message, content, client))
   
   /* The real action */
   [
@@ -158,12 +158,12 @@ const fs = require('fs');
 
 const directoryPath = path.join(__dirname, 'modules');
 
-fs.readdir(directoryPath, function (err, files) {
+fs.readdir(directoryPath, function(err, files) {
     if (err) {
         return console.log('Unable to scan directory: ' + err);
     } 
     
-    files.forEach(function (file) {
+    files.forEach(function(file) {
         require('./modules/' + file)(bind)
     });
 });
