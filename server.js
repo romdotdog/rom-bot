@@ -1,7 +1,5 @@
 'use strict';
 
-// Good luck reading this you little shit
-
 const Discord = require('discord.js');
 
 const client = new Discord.Client();
