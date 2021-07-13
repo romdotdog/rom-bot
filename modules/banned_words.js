@@ -1,5 +1,4 @@
-const { secrets } = require("docker-secret")
-const banned = (secrets.BANNED_WORDS ?? process.env.BANNED_WORDS).split(" ")
+const banned = process.env.BANNED_WORDS.split(" ")
 
 String.prototype.banned = function () {
 	return banned.some(w => this.includes(w))

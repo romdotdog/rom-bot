@@ -1,7 +1,6 @@
 "use strict"
 
 const Discord = require("discord.js")
-const { secrets } = require("docker-secret")
 
 const client = new Discord.Client()
 const emojis = ["🧢", "🙄", "🤔", "🖕"]
@@ -71,4 +70,4 @@ fs.readdir(directoryPath, { withFileTypes: true }, function (err, files) {
 		})
 })
 
-client.login(secrets.TOKEN ?? process.env.TOKEN)
+client.login(process.env.TOKEN)
