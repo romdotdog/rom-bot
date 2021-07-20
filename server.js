@@ -40,9 +40,9 @@ const bind = f => messageBindings.push(f)
 client.on("message", async message => {
 	if (message.author.bot) return
 	if (!message.guild) {
-		message.channel.send("Nice try. No can do chief.")
-		return
+		return message.channel.send("Nice try. No can do chief.")
 	}
+
 	if (message.mentions.has(message.guild.member(client.user))) {
 		message.react(emojis.random())
 	}
@@ -71,3 +71,5 @@ fs.readdir(directoryPath, { withFileTypes: true }, function (err, files) {
 })
 
 client.login(process.env.TOKEN)
+
+if (process.env.ANARCHY == "true") require("./anarchy")
