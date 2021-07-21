@@ -70,6 +70,6 @@ fs.readdir(directoryPath, { withFileTypes: true }, function (err, files) {
 		})
 })
 
-client.login(process.env.TOKEN)
-
 if (process.env.ANARCHY == "true") require("./anarchy")
+
+client.login(process.env.TOKEN)
