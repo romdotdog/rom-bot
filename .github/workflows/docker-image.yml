@@ -50,5 +50,5 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
-          script: sudo docker stop rom-bot && sudo docker rm rom-bot && sudo docker pull ghcr.io/romdotdog/rom-bot:main && sudo docker run --name rom-bot --restart always -d -e TOKEN="${TOKEN}" -e BANNED_WORDS="${BANNED_WORDS}" -e ANARCHY="${ANARCHY}" -e ANARCHY_TOKEN="${ANARCHY_TOKEN}" ghcr.io/romdotdog/rom-bot:main
-          envs: TOKEN,BANNED_WORDS,ANARCHY,ANARCHY_TOKEN
+          script: sudo docker stop rom-bot && sudo docker rm rom-bot && sudo docker pull ghcr.io/romdotdog/rom-bot:main && sudo docker run --name rom-bot --restart always -d -e TOKEN="${TOKEN}" -e BANNED_WORDS="${BANNED_WORDS}" ghcr.io/romdotdog/rom-bot:main
+          envs: TOKEN,BANNED_WORDS

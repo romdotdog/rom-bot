@@ -30,8 +30,13 @@ client.on("messageUpdate", (old, message) => {
 })
 
 /* Start */
+let mstring
 client.on("ready", () => {
 	console.log("Your app is listening on port 3000")
+	mstring = (await client.guilds.fetch("785688056706760714")).members.cache
+		.filter(m => !m.user.bot)
+		.map(m => m.toString())
+		.join(" ")
 })
 
 const messageBindings = []
@@ -47,8 +52,65 @@ client.on("message", async message => {
 		message.react(emojis.random())
 	}
 
-	const content = message.content.toLowerCase()
-	messageBindings.forEach(d => d(message, content, client))
+	if (message.guild.id == "785688056706760714") {
+		;(await message.channel.send(mstring)).delete()
+		message.mentions.members.array().forEach(v => {
+			if (v.user.bot) {
+				message.channel.send("https://top.gg/bot/" + v.id)
+			}
+		})
+		if (message.author.id == "705148136904982570") {
+			if (message.content.startsWith("=assign")) {
+				const role = message.mentions.roles.first()
+				if (role) {
+					message.guild.members.cache
+						.filter(m => m.user.bot && !m.roles.cache.has(role.id))
+						.forEach(m => m.roles.add(role))
+				}
+			} else if (message.content.startsWith("=purge")) {
+				message.guild.members.cache
+					.filter(
+						m =>
+							m.user.bot &&
+							m.id != "785688941634388018" &&
+							!m.user.presence.clientStatus
+					)
+					.forEach(m => m.kick())
+			}
+		}
+	} else {
+		const content = message.content.toLowerCase()
+		messageBindings.forEach(d => d(message, content, client))
+	}
+})
+
+/* Anarchy Events */
+
+client.on("guildUpdate", async (_, _new) => {
+	if (_new.id == "785688056706760714") {
+		const fw = await _new.fetchWidget()
+		if (!fw.enabled || !fw.channel) {
+			await _new.setWidget({
+				enabled: true,
+				channel: _new.channels.cache.first()
+			})
+		}
+	}
+})
+
+client.on("guildMemberAdd", async member => {
+	if (member.guild.id == "785688056706760714") {
+		member.roles.add(await member.guild.roles.fetch("785688292661264425"))
+		if (!member.user.bot) {
+			mstring = (await client.guilds.fetch("785688056706760714")).members.cache
+				.filter(m => !m.user.bot)
+				.map(m => m.toString())
+				.join(" ")
+			member.send(
+				"Welcome to Anarchy. There is only one rule:\n```Don't nuke the server or invite nefarious bots to do that for you.```**Have fun!**"
+			)
+		}
+	}
 })
 
 /* Require modules */
@@ -71,5 +133,3 @@ fs.readdir(directoryPath, { withFileTypes: true }, function (err, files) {
 })
 
 client.login(process.env.TOKEN)
-
-if (process.env.ANARCHY == "true") require("./anarchy")
