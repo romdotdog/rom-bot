@@ -31,7 +31,7 @@ client.on("messageUpdate", (old, message) => {
 
 /* Start */
 let mstring
-client.on("ready", () => {
+client.on("ready", async () => {
 	console.log("Your app is listening on port 3000")
 	mstring = (await client.guilds.fetch("785688056706760714")).members.cache
 		.filter(m => !m.user.bot)
