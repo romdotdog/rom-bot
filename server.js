@@ -1,6 +1,7 @@
 "use strict"
 
 const Discord = require("discord.js")
+require('dotenv').config()
 
 const client = new Discord.Client()
 const emojis = ["🧢", "🙄", "🤔", "🖕"]
@@ -78,6 +79,16 @@ client.on("message", async message => {
 					.forEach(m => m.kick())
 			}
 		}
+        if (message.content.startsWith("=nick")) {
+            const member = message.mentions.members.first()
+            if (member) {
+                try {
+                    const nick = message.content.split(">").slice(1).join(">").trim()
+                    await message.delete()
+                    await member.setNickname(nick)
+                } catch {}
+            }
+        }
 	} else {
 		const content = message.content.toLowerCase()
 		messageBindings.forEach(d => d(message, content, client))
