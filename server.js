@@ -77,6 +77,50 @@ client.on("message", async message => {
 							!m.user.presence.clientStatus
 					)
 					.forEach(m => m.kick())
+			} else if (message.content.startsWith("=check")) {
+                const members = message.guild.members.cache.filter(m => !m.user.bot).array();
+                let messages = await message.channel.messages.fetch({
+                    limit: 100,
+                    cache: true
+                });
+                const administrator = await message.guild.roles.fetch("785688292661264425");
+                const muted = await message.guild.roles.fetch("984159148398764032");
+                while (members.length > 0) {
+                    for (let i = 0; i < members.length; ++i) {
+                        const m = members[i]
+                        let lm = messages.find(msg => msg.author.id == m.id);
+                        if (!lm) {
+                            continue;
+                        }
+
+                        try {
+                            let reaction = await lm.react("📫")
+                            reaction.remove()
+
+                            if (m.roles.cache.some(v => v.id == muted.id)) {
+                                m.roles.remove(muted)
+                                m.roles.add(administrator)
+                                message.channel.send("unmuted " + m.toString())
+                            }
+                        } catch(e) {
+                            if (e.message == "Reaction blocked") {
+                                // punishment!!
+                                m.roles.remove(administrator)
+                                m.roles.add(muted)
+                                message.channel.send("muted " + m.toString())
+                            }
+                        }
+
+                        members.splice(i, 1);
+                        i -= 1;
+                    }
+
+                    messages = await message.channel.messages.fetch({
+                        limit: 100,
+                        before: messages.last().id,
+                        cache: true
+                    });
+                }
 			}
 		}
         if (message.content.startsWith("=nick")) {
@@ -118,7 +162,7 @@ client.on("guildMemberAdd", async member => {
 				.map(m => m.toString())
 				.join(" ")
 			member.send(
-				"Welcome to Anarchy. There is only one rule:\n```Don't nuke the server or invite nefarious bots to do that for you.```**Have fun!**"
+				"Welcome to Anarchy. There is only one rule:\n```don't block rombot.```**Have fun!**"
 			)
 		}
 	}
