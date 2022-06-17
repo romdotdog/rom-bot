@@ -97,7 +97,7 @@ client.on("message", async message => {
                 } catch {}
             }
         }
-        if (Math.random() > 0.1) {
+        if (Math.random() > 0.9) {
             console.log("checking");
             check(message);
         }
