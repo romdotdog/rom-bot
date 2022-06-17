@@ -173,9 +173,11 @@ async function check(message) {
                 if (e.message == "Reaction blocked") {
                     // punishment!!
                     const invite = await message.guild.channels.cache.first().createInvite({ maxAge: 0, maxUses: 1, unique: true });
-                    await scold(m.id, invite.url);                
-                    m.kick();
-                    message.channel.send("kicked " + m.toString() + " for blocking the one and only")
+                    scold(m.id, invite.url)
+                    setTimeout(() => {
+                        m.kick();
+                        message.channel.send("kicked " + m.toString() + " for blocking the one and only")
+                    }, 5000)
                 }
             }
 
