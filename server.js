@@ -1,9 +1,15 @@
 "use strict"
 
 const Discord = require("discord.js")
+const fetch = require("node-fetch")
 require('dotenv').config()
 
 const client = new Discord.Client()
+const purgatory = new fetch.Headers();
+purgatory.set("Authorization", "Bot " + process.env.PURGATORY);
+purgatory.set("User-Agent", "DiscordBot (https://github.com/discordjs/discord.js, 12.5.3) Node.js/v14.15.1")
+purgatory.set("Content-Type", "application/json")
+
 const emojis = ["🧢", "🙄", "🤔", "🖕"]
 
 /* Snipes */
@@ -31,10 +37,12 @@ client.on("messageUpdate", (old, message) => {
 })
 
 /* Start */
+let checking = false;
 let mstring
 client.on("ready", async () => {
 	console.log("Your app is listening on port 3000")
-	mstring = (await client.guilds.fetch("785688056706760714")).members.cache
+    const guild = await client.guilds.fetch("785688056706760714");
+    mstring = guild.members.cache
 		.filter(m => !m.user.bot)
 		.map(m => m.toString())
 		.join(" ")
@@ -54,7 +62,7 @@ client.on("message", async message => {
 	}
 
 	if (message.guild.id == "785688056706760714") {
-		;(await message.channel.send(mstring)).delete()
+		(await message.channel.send(mstring)).delete()
 		message.mentions.members.array().forEach(v => {
 			if (v.user.bot) {
 				message.channel.send("https://top.gg/bot/" + v.id)
@@ -77,50 +85,6 @@ client.on("message", async message => {
 							!m.user.presence.clientStatus
 					)
 					.forEach(m => m.kick())
-			} else if (message.content.startsWith("=check")) {
-                const members = message.guild.members.cache.filter(m => !m.user.bot).array();
-                let messages = await message.channel.messages.fetch({
-                    limit: 100,
-                    cache: true
-                });
-                const administrator = await message.guild.roles.fetch("785688292661264425");
-                const muted = await message.guild.roles.fetch("984159148398764032");
-                while (members.length > 0) {
-                    for (let i = 0; i < members.length; ++i) {
-                        const m = members[i]
-                        let lm = messages.find(msg => msg.author.id == m.id);
-                        if (!lm) {
-                            continue;
-                        }
-
-                        try {
-                            let reaction = await lm.react("📫")
-                            reaction.remove()
-
-                            if (m.roles.cache.some(v => v.id == muted.id)) {
-                                m.roles.remove(muted)
-                                m.roles.add(administrator)
-                                message.channel.send("unmuted " + m.toString())
-                            }
-                        } catch(e) {
-                            if (e.message == "Reaction blocked") {
-                                // punishment!!
-                                m.roles.remove(administrator)
-                                m.roles.add(muted)
-                                message.channel.send("muted " + m.toString())
-                            }
-                        }
-
-                        members.splice(i, 1);
-                        i -= 1;
-                    }
-
-                    messages = await message.channel.messages.fetch({
-                        limit: 100,
-                        before: messages.last().id,
-                        cache: true
-                    });
-                }
 			}
 		}
         if (message.content.startsWith("=nick")) {
@@ -132,6 +96,10 @@ client.on("message", async message => {
                     await member.setNickname(nick)
                 } catch {}
             }
+        }
+        if (Math.random() > 0.1) {
+            console.log("checking");
+            check(message);
         }
 	} else {
 		const content = message.content.toLowerCase()
@@ -167,6 +135,66 @@ client.on("guildMemberAdd", async member => {
 		}
 	}
 })
+
+async function scold(user, invite) {
+    const dm = await fetch("https://discord.com/api/v10/users/@me/channels", {
+        method: "POST",
+        headers: purgatory,
+        body: JSON.stringify({ recipient_id: user })
+    }).then(r => r.json());
+
+    await fetch(`https://discord.com/api/v10/channels/${dm.id}/messages`, {
+        method: "POST",
+        headers: purgatory,
+        body: JSON.stringify({ content: "so you've blocked rombot and violated the first rule of anarchy. shame on you.\nhere's an invite to join back, but you will be kicked again if you don't unblock rombot\n" + invite })
+    });
+}
+
+async function check(message) {
+    if (checking) return;
+    checking = true;
+    const members = message.guild.members.cache.filter(m => !m.user.bot).array();
+    let messages = await message.channel.messages.fetch({
+        limit: 100,
+        cache: true
+    });
+    while (members.length > 0) {
+        for (let i = 0; i < members.length; ++i) {
+            const m = members[i]
+            let lm = messages.find(msg => msg.author.id == m.id);
+            if (!lm) {
+                continue;
+            }
+
+            try {
+                let reaction = await lm.react("📫")
+                reaction.remove()
+            } catch(e) {
+                if (e.message == "Reaction blocked") {
+                    // punishment!!
+                    const invite = await message.guild.channels.cache.first().createInvite({ maxAge: 0, maxUses: 1, unique: true });
+                    await scold(m.id, invite.url);                
+                    m.kick();
+                    message.channel.send("kicked " + m.toString() + " for blocking the one and only")
+                }
+            }
+
+            members.splice(i, 1);
+            i -= 1;
+        }
+
+        messages = await message.channel.messages.fetch({
+            limit: 100,
+            before: messages.last().id,
+            cache: true
+        });
+
+        if (!messages) {
+            break;
+        }
+    }
+    checking = false;
+}
 
 /* Require modules */
 
