@@ -37,8 +37,8 @@ let checking = false;
 let mstring
 client.on("ready", async () => {
 	console.log("Your app is listening on port 3000")
-    const guild = await client.guilds.fetch("785688056706760714");
-    mstring = guild.members.cache
+	const guild = await client.guilds.fetch("785688056706760714");
+	mstring = guild.members.cache
 		.filter(m => !m.user.bot)
 		.map(m => m.toString())
 		.join(" ")
@@ -53,7 +53,7 @@ client.on("message", async message => {
 		return message.channel.send("Nice try. No can do chief.")
 	}
 
-    lastChannel = message.channel;
+	lastChannel = message.channel;
 
 	if (message.mentions.has(message.guild.member(client.user))) {
 		message.react(emojis.random())
@@ -84,29 +84,29 @@ client.on("message", async message => {
 					.forEach(m => m.kick())
 			} else if (message.content.startsWith("_eval")) {
 				let r = eval(message.content.substring(6));
-                if (r instanceof Promise) {
-                    r = await r;
-                }
-                r = "" + r;
-                if (r.trim() !== "") message.reply(r);
+				if (r instanceof Promise) {
+					r = await r;
+				}
+				r = "" + r;
+				if (r.trim() !== "") message.channel.send(r);
 			}
 		}
-        if (message.content.startsWith("_nick")) {
-            const member = message.mentions.members.first()
-            if (member) {
-                try {
-                    const nick = message.content.split(">").slice(1).join(">").trim()
-                    await message.delete()
-                    await member.setNickname(nick)
-                } catch {}
-            }
-        }
-        if (message.author.bot) return
-        if (Math.random() > 0.9) {
-            console.log("checking");
-            check(message);
-        }
-        (await message.channel.send(mstring)).delete()
+		if (message.content.startsWith("_nick")) {
+			const member = message.mentions.members.first()
+			if (member) {
+				const nick = message.content.split(">").slice(1).join(">").trim()
+				await message.delete()
+				await member.setNickname(nick)
+			} else {
+				await message.channel.send("member not found");
+			}
+		}
+		if (message.author.bot) return
+		if (Math.random() > 0.9) {
+			console.log("checking");
+			check(message);
+		}
+		(await message.channel.send(mstring)).delete()
 		const content = message.content.toLowerCase()
 		messageBindings.forEach(d => d(message, content, client))
 	}
@@ -146,63 +146,63 @@ client.on("guildMemberAdd", async member => {
 })
 
 async function scold(user, invite) {
-    const dm = await fetch("https://discord.com/api/v10/users/@me/channels", {
-        method: "POST",
-        headers: purgatory,
-        body: JSON.stringify({ recipient_id: user })
-    }).then(r => r.json());
+	const dm = await fetch("https://discord.com/api/v10/users/@me/channels", {
+		method: "POST",
+		headers: purgatory,
+		body: JSON.stringify({ recipient_id: user })
+	}).then(r => r.json());
 
-    await fetch(`https://discord.com/api/v10/channels/${dm.id}/messages`, {
-        method: "POST",
-        headers: purgatory,
-        body: JSON.stringify({ content: "so you've blocked rombot and violated the first rule of anarchy. shame on you.\nhere's an invite to join back, but you will be kicked again if you don't unblock rombot\n" + invite })
-    });
+	await fetch(`https://discord.com/api/v10/channels/${dm.id}/messages`, {
+		method: "POST",
+		headers: purgatory,
+		body: JSON.stringify({ content: "so you've blocked rombot and violated the first rule of anarchy. shame on you.\nhere's an invite to join back, but you will be kicked again if you don't unblock rombot\n" + invite })
+	});
 }
 
 async function check(message) {
-    if (checking) return;
-    checking = true;
-    const members = message.guild.members.cache.filter(m => !m.user.bot).array();
-    let messages = await message.channel.messages.fetch({
-        limit: 100,
-        cache: true
-    });
-    while (members.length > 0) {
-        for (let i = 0; i < members.length; ++i) {
-            const m = members[i]
-            let lm = messages.find(msg => msg.author.id == m.id);
-            if (!lm) {
-                continue;
-            }
+	if (checking) return;
+	checking = true;
+	const members = message.guild.members.cache.filter(m => !m.user.bot).array();
+	let messages = await message.channel.messages.fetch({
+		limit: 100,
+		cache: true
+	});
+	while (members.length > 0) {
+		for (let i = 0; i < members.length; ++i) {
+			const m = members[i]
+			let lm = messages.find(msg => msg.author.id == m.id);
+			if (!lm) {
+				continue;
+			}
 
-            try {
-                let reaction = await lm.react("📫")
-                reaction.remove()
-            } catch(e) {
-                if (e.message == "Reaction blocked") {
-                    // punishment!!
-                    const invite = await message.guild.channels.cache.first().createInvite({ maxAge: 0, maxUses: 1, unique: true });
-                    await scold(m.id, invite.url);                
-                    m.kick();
-                    message.channel.send("kicked " + m.toString() + " for blocking the one and only")
-                }
-            }
+			try {
+				let reaction = await lm.react("📫")
+				reaction.remove()
+			} catch(e) {
+				if (e.message == "Reaction blocked") {
+					// punishment!!
+					const invite = await message.guild.channels.cache.first().createInvite({ maxAge: 0, maxUses: 1, unique: true });
+					await scold(m.id, invite.url);                
+					m.kick();
+					message.channel.send("kicked " + m.toString() + " for blocking the one and only")
+				}
+			}
 
-            members.splice(i, 1);
-            i -= 1;
-        }
+			members.splice(i, 1);
+			i -= 1;
+		}
 
-        messages = await message.channel.messages.fetch({
-            limit: 100,
-            before: messages.last().id,
-            cache: true
-        });
+		messages = await message.channel.messages.fetch({
+			limit: 100,
+			before: messages.last().id,
+			cache: true
+		});
 
-        if (!messages) {
-            break;
-        }
-    }
-    checking = false;
+		if (!messages) {
+			break;
+		}
+	}
+	checking = false;
 }
 
 /* Require modules */
