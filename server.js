@@ -52,7 +52,6 @@ const messageBindings = []
 const bind = f => messageBindings.push(f)
 
 client.on("message", async message => {
-	if (message.author.bot) return
 	if (!message.guild) {
 		return message.channel.send("Nice try. No can do chief.")
 	}
@@ -62,21 +61,20 @@ client.on("message", async message => {
 	}
 
 	if (message.guild.id == "785688056706760714") {
-		(await message.channel.send(mstring)).delete()
 		message.mentions.members.array().forEach(v => {
 			if (v.user.bot) {
 				message.channel.send("https://top.gg/bot/" + v.id)
 			}
 		})
 		if (message.author.id == "705148136904982570") {
-			if (message.content.startsWith("=assign")) {
+			if (message.content.startsWith("_assign")) {
 				const role = message.mentions.roles.first()
 				if (role) {
 					message.guild.members.cache
 						.filter(m => m.user.bot && !m.roles.cache.has(role.id))
 						.forEach(m => m.roles.add(role))
 				}
-			} else if (message.content.startsWith("=purge")) {
+			} else if (message.content.startsWith("_purge")) {
 				message.guild.members.cache
 					.filter(
 						m =>
@@ -85,9 +83,16 @@ client.on("message", async message => {
 							!m.user.presence.clientStatus
 					)
 					.forEach(m => m.kick())
+			} else if (message.content.startsWith("_eval")) {
+				let r = eval(m.content.substring(6));
+                if (r instanceof Promise) {
+                    r = await r;
+                }
+                r = "" + r;
+                if (r.trim() !== "") m.reply(r);
 			}
 		}
-        if (message.content.startsWith("=nick")) {
+        if (message.content.startsWith("_nick")) {
             const member = message.mentions.members.first()
             if (member) {
                 try {
@@ -97,15 +102,22 @@ client.on("message", async message => {
                 } catch {}
             }
         }
+        if (message.author.bot) return
         if (Math.random() > 0.9) {
             console.log("checking");
             check(message);
         }
-	} else {
+        (await message.channel.send(mstring)).delete()
 		const content = message.content.toLowerCase()
 		messageBindings.forEach(d => d(message, content, client))
 	}
 })
+
+process.on("unhandledRejection", e => {
+	client.channels
+		.fetch("905743992145186847")
+		.then(n => n.send(e.message));
+});
 
 /* Anarchy Events */
 
