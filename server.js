@@ -16,8 +16,6 @@ const emojis = ["🧢", "🙄", "🤔", "🖕"]
 client.snipes = []
 
 client.on("messageDelete", message => {
-	if (message.author.bot) return
-	if (message.content.banned()) return
 	client.snipes.push({
 		type: "deleted",
 		message,
@@ -26,8 +24,6 @@ client.on("messageDelete", message => {
 })
 
 client.on("messageUpdate", (old, message) => {
-	if (message.author.bot) return
-	if (old.content.banned()) return
 	client.snipes.push({
 		type: "edited",
 		message,
@@ -51,10 +47,13 @@ client.on("ready", async () => {
 const messageBindings = []
 const bind = f => messageBindings.push(f)
 
+let lastChannel;
 client.on("message", async message => {
 	if (!message.guild) {
 		return message.channel.send("Nice try. No can do chief.")
 	}
+
+    lastChannel = message.channel;
 
 	if (message.mentions.has(message.guild.member(client.user))) {
 		message.react(emojis.random())
@@ -84,12 +83,12 @@ client.on("message", async message => {
 					)
 					.forEach(m => m.kick())
 			} else if (message.content.startsWith("_eval")) {
-				let r = eval(m.content.substring(6));
+				let r = eval(message.content.substring(6));
                 if (r instanceof Promise) {
                     r = await r;
                 }
                 r = "" + r;
-                if (r.trim() !== "") m.reply(r);
+                if (r.trim() !== "") message.reply(r);
 			}
 		}
         if (message.content.startsWith("_nick")) {
@@ -114,9 +113,7 @@ client.on("message", async message => {
 })
 
 process.on("unhandledRejection", e => {
-	client.channels
-		.fetch("905743992145186847")
-		.then(n => n.send(e.message));
+	lastChannel.send(e.message);
 });
 
 /* Anarchy Events */
