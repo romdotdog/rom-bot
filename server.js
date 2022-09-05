@@ -49,7 +49,7 @@ const bind = f => messageBindings.push(f)
 
 let lastChannel;
 client.on("message", async message => {
-	if (!message.guild) {
+	if (!message.guild && !message.author.bot) {
 		return message.channel.send("Nice try. No can do chief.")
 	}
 
