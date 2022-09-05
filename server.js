@@ -49,8 +49,11 @@ const bind = f => messageBindings.push(f)
 
 let lastChannel;
 client.on("message", async message => {
-	if (!message.guild && !message.author.bot) {
-		return message.channel.send("Nice try. No can do chief.")
+	if (!message.guild) {
+        if (!message.author.bot) {
+            message.channel.send("Nice try. No can do chief.")
+        }
+        return;
 	}
 
 	lastChannel = message.channel;
